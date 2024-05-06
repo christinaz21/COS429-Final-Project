@@ -11,13 +11,27 @@ def load_image(image_path):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     return image
 
+# def apply_mask_rcnn(image):
+#     model = maskrcnn_resnet50_fpn_v2(weights='DEFAULT')
+#     model.eval()
+#     transform = F.to_tensor(image).unsqueeze(0)
+#     with torch.no_grad():
+#         prediction = model(transform)
+#     return prediction[0]
+    
 def apply_mask_rcnn(image):
-    model = maskrcnn_resnet50_fpn_v2(weights='DEFAULT')
+    model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
     model.eval()
     transform = F.to_tensor(image).unsqueeze(0)
     with torch.no_grad():
         prediction = model(transform)
-    return prediction[0]
+
+    labels = prediction[0]['labels'].cpu().numpy()
+
+    coco_ids_people_animals = [1, 3, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27] # COCO ids for people and animals
+    masks = prediction[0]['masks'][np.isin(labels, coco_ids_people_animals)] > 0.5  # only keep the masks for people and animals
+    
+    return masks
 
 def apply_grabcut(image, mask):
     #for i in range(mask.shape[0]):
@@ -37,9 +51,9 @@ def apply_grabcut(image, mask):
 
 def segment_image(image_path):
     image = load_image(image_path)
-    outputs = apply_mask_rcnn(image)
+    masks = apply_mask_rcnn(image)
     #print(outputs)
-    masks = outputs['masks'] > 0.5
+    # masks = outputs['masks'] > 0.5
     mask_combined = np.zeros(masks.shape[-2:], dtype=np.uint8)
     if masks.numel() > 0:
         mask_combined = masks[0, 0].byte().cpu().numpy()
