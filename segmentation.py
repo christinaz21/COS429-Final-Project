@@ -20,7 +20,7 @@ def load_image(image_path):
 #     return prediction[0]
     
 def apply_mask_rcnn(image):
-    model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
+    model = maskrcnn_resnet50_fpn_v2(weights='DEFAULT')
     model.eval()
     transform = F.to_tensor(image).unsqueeze(0)
     with torch.no_grad():
@@ -86,6 +86,6 @@ def process_images(input_folder, output_folder):
                 print(f"Failed to process {image_path}: {e}")
 
 # change input and output folder for each scene
-input_folder = 'sky_occluded'
-output_folder = 'sky_processed'
+input_folder = 'images'
+output_folder = 'processed'
 process_images(input_folder, output_folder)
