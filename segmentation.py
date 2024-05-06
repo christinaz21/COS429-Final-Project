@@ -62,21 +62,33 @@ def segment_image(image_path):
     #plt.imshow(segmented)
     return image, segmented
 
-def process_images(input_folder, output_folder):
+def process_images(input_folder, output_folder, mask_folder):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
+    
+    if not os.path.exists(mask_folder):
+        os.makedirs(mask_folder)
     
     count = 0
     for filename in os.listdir(input_folder):
         if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
             image_path = os.path.join(input_folder, filename)
             output_path = os.path.join(output_folder, filename)
+            mask_path = os.path.join(mask_folder, filename)
 
             try:
                 original_image, segmented_mask = segment_image(image_path)
                 background_image = original_image.copy()
                 background_image[segmented_mask] = 0
                 cv2.imwrite(output_path, cv2.cvtColor(background_image, cv2.COLOR_RGB2BGR))
+
+                # Get the dimensions of the image
+                height, width, channels = original_image.shape
+                # Create a black image of the same dimensions
+                black_image = np.zeros((height, width, channels), dtype=np.uint8)
+                black_image[segmented_mask] = 1
+                black_image = black_image.astype(np.uint8) * 255 
+                cv2.imwrite(mask_path, black_image)
                 #print(f"Processed and saved background image to {output_path}")
                 count += 1
                 if count % 50 == 0:
@@ -88,4 +100,5 @@ def process_images(input_folder, output_folder):
 # change input and output folder for each scene
 input_folder = 'images'
 output_folder = 'processed'
-process_images(input_folder, output_folder)
+mask_folder = 'masks'
+process_images(input_folder, output_folder, mask_folder)
