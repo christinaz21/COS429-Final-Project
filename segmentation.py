@@ -62,7 +62,7 @@ def segment_image(image_path):
     #plt.imshow(segmented)
     return image, segmented
 
-def process_images(input_folder, output_folder, mask_folder):
+def process_images(input_folder, output_folder, mask_folder, start_cat, end_cat):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     
@@ -73,12 +73,21 @@ def process_images(input_folder, output_folder, mask_folder):
 
 
     for dirpath, dirnames, filenames in os.walk(input_folder):
+        current_folder = os.path.basename(dirpath)
+        print(current_folder)
+        if current_folder == input_folder: 
+            continue
+
+        if int(current_folder) < start_cat or int(current_folder) > end_cat:
+            continue
+
         files = [f for f in filenames if not f.startswith('.DS_Store')]
+        #print(filenames)
         for filename in files:
-            print(dirpath)
-            print(filename)
+            #print(dirpath)
+            #print(filename)
             image_path = os.path.join(dirpath, filename)
-            print(f"Processing file: {image_path}")
+            #print(f"Processing file: {image_path}")
 
             relative_path = os.path.relpath(dirpath, input_folder)
             output_dir = os.path.join(output_folder, relative_path)
@@ -120,4 +129,6 @@ def process_images(input_folder, output_folder, mask_folder):
 input_folder = 'images'
 output_folder = 'processed'
 mask_folder = 'masks'
-process_images(input_folder, output_folder, mask_folder)
+start_cat = 1
+end_cat = 3
+process_images(input_folder, output_folder, mask_folder, start_cat, end_cat)
