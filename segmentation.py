@@ -70,32 +70,51 @@ def process_images(input_folder, output_folder, mask_folder):
         os.makedirs(mask_folder)
     
     count = 0
-    for filename in os.listdir(input_folder):
-        if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
-            image_path = os.path.join(input_folder, filename)
-            output_path = os.path.join(output_folder, filename)
-            mask_path = os.path.join(mask_folder, filename)
 
-            try:
-                original_image, segmented_mask = segment_image(image_path)
-                background_image = original_image.copy()
-                background_image[segmented_mask] = 0
-                cv2.imwrite(output_path, cv2.cvtColor(background_image, cv2.COLOR_RGB2BGR))
 
-                # Get the dimensions of the image
-                height, width, channels = original_image.shape
-                # Create a black image of the same dimensions
-                black_image = np.zeros((height, width, channels), dtype=np.uint8)
-                black_image[segmented_mask] = 1
-                black_image = black_image.astype(np.uint8) * 255 
-                cv2.imwrite(mask_path, black_image)
-                #print(f"Processed and saved background image to {output_path}")
-                count += 1
-                if count % 50 == 0:
-                    print("processed ", count)
-                
-            except Exception as e:
-                print(f"Failed to process {image_path}: {e}")
+    for dirpath, dirnames, filenames in os.walk(input_folder):
+        files = [f for f in filenames if not f.startswith('.DS_Store')]
+        for filename in files:
+            print(dirpath)
+            print(filename)
+            image_path = os.path.join(dirpath, filename)
+            print(f"Processing file: {image_path}")
+
+            relative_path = os.path.relpath(dirpath, input_folder)
+            output_dir = os.path.join(output_folder, relative_path)
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir)
+            mask_dir = os.path.join(mask_folder, relative_path)
+            if not os.path.exists(mask_dir):
+                os.makedirs(mask_dir)
+
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                image_path = os.path.join(dirpath, filename)
+                output_path = os.path.join(output_dir, filename)
+                mask_path = os.path.join(mask_dir, filename)
+
+                try:
+                    original_image, segmented_mask = segment_image(image_path)
+                    background_image = original_image.copy()
+                    background_image[segmented_mask] = 0
+                    cv2.imwrite(output_path, cv2.cvtColor(background_image, cv2.COLOR_RGB2BGR))
+
+                    # Get the dimensions of the image
+                    height, width, channels = original_image.shape
+                    # Create a black image of the same dimensions
+                    black_image = np.zeros((height, width, channels), dtype=np.uint8)
+                    black_image[segmented_mask] = 1
+                    black_image = black_image.astype(np.uint8) * 255 
+                    cv2.imwrite(mask_path, black_image)
+                    #print(f"Processed and saved background image to {output_path}")
+                    count += 1
+                    if count % 50 == 0:
+                        print("processed ", count)
+                    
+                except Exception as e:
+                    print(f"Failed to process {image_path}: {e}")
+
+
 
 # change input and output folder for each scene
 input_folder = 'images'
